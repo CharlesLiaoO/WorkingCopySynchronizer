@@ -5,6 +5,11 @@
 #include <QProcess>
 #include "NotPrjRel.h"
 
+/// Max error of system time synchronization (ms).
+/// For the situation that use the vcs and working dir in different os,
+/// they have error in the synchronization of 2 os.
+int nMaxErrorOfSystime = 500;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -23,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent)
     sPathWorking = setting.value("PathWorking", "").toString();
     ui->lineEdit_PathVcs->setText(sPathVcs);
     ui->lineEdit_PathWorking->setText(sPathWorking);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -138,11 +145,10 @@ void MainWindow::slTmrQueryVsc()
             continue;
         QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
 
-        QDateTime dtFiVcsLm = fiVcs.lastModified();
-        QDateTime dtFiWorkingLm = fiWorking.lastModified();
-        if (dtFiVcsLm > dtFiWorkingLm) {
+        int msWorkingMt2VcsMt = fiWorking.lastModified().msecsTo(fiVcs.lastModified());
+        if (msWorkingMt2VcsMt > nMaxErrorOfSystime) {
             CopyFileIncludeMTime(fiVcs, fiWorking);
-        } else if (dtFiWorkingLm > dtFiVcsLm) {
+        } else if (msWorkingMt2VcsMt < - nMaxErrorOfSystime) {
             CopyFileIncludeMTime(fiWorking, fiVcs);
         }
 
