@@ -11,8 +11,8 @@ int main(int argc, char *argv[])
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
-        const QString baseName = "VcsSync_" + QLocale(locale).name();
-        if (translator.load(":/i18n/" + baseName)) {
+        const QString baseName = "" + QLocale(locale).name();
+        if (translator.load(":/translations/" + baseName)) {
             a.installTranslator(&translator);
             break;
         }

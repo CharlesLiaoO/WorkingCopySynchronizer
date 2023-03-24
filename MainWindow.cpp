@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->toolButton_About->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
-    ui->label_StateMsg->setText(tr("已停止"));
+    ui->label_StateMsg->setText(tr("Stopped"));
 
     tmrQueryVsc = new QTimer(this);
     prcQueryVsc = new QProcess(this);
@@ -98,13 +98,13 @@ void MainWindow::on_pushButton_Start_clicked()
 
     bStop = false;
     tmrQueryVsc->start(1000);
-    ui->label_StateMsg->setText(tr("正在运行"));
+    ui->label_StateMsg->setText(tr("Running"));
 }
 
 void MainWindow::on_pushButton_Stop_clicked()
 {
     bStop = true;
-    ui->label_StateMsg->setText(tr("已停止"));
+    ui->label_StateMsg->setText(tr("Stopped"));
     if (tmrQueryVsc->isActive()) {
         tmrQueryVsc->stop(); }
 }
@@ -125,7 +125,7 @@ void MainWindow::slTmrQueryVsc()
 
     for (auto &sVcsFile: sVcsFileList) {
         if (bStop) {
-            ui->label_StateMsg->setText(tr("已停止"));
+            ui->label_StateMsg->setText(tr("Stopped"));
             return;
         }
 
