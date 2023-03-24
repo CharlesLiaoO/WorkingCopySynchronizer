@@ -24,12 +24,10 @@ QString GetFileSuffix(const QString &path)
 #else
 #include <utime.h>
 #endif
-bool SetMTimeDisk(const QString &filePath, const QDateTime &dtLocal)
+bool SetFileMTime(const QString &filePath, const QDateTime &dtLocal)
 {
 #ifdef Q_OS_WIN
-    // _utime("cl/Logs.txt", NULL);  //NULL 当前时间。返回-1 失败。wince没有此接口
-
-    // SetFileTime wince有
+//    SetFileTime, valid in wince
     QDateTime dtUtc = dtLocal.toUTC();
 
     HANDLE hFile = CreateFileW(filePath.toStdWString().data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -46,29 +44,22 @@ bool SetMTimeDisk(const QString &filePath, const QDateTime &dtLocal)
     if(!SystemTimeToFileTime(&stUtc, &ftUtc))
         return false;
 
-//    i=SetFileTime(hFile,&ftUTC,(LPFILETIME) NULL, (LPFILETIME) NULL);  //创建时间
-//    i=SetFileTime(hFile,(LPFILETIME) NULL,&ftUTC2, (LPFILETIME) NULL);  //访问时间
-    bool ret = SetFileTime(hFile, NULL, NULL, &ftUtc);  //修改时间
+    bool ret = SetFileTime(hFile, NULL, NULL, &ftUtc);
     CloseHandle(hFile);
     return ret;
 #else
-    const QDateTime &dtUtc = dtLocal;
-    struct tm tmModify;
-    tmModify.tm_year  = dtUtc.date().year() - 1900;
-    tmModify.tm_mon   = dtUtc.date().month() - 1;
-    tmModify.tm_mday  = dtUtc.date().day();
-    tmModify.tm_hour  = dtUtc.time().hour();
-    tmModify.tm_min   = dtUtc.time().minute();
-    tmModify.tm_sec   = dtUtc.time().second();
+    const QDateTime &dt = dtLocal;
 
-    struct utimbuf ut;  //二者需要同时修改，否则修改不成功
-    ut.modtime = mktime(&tmModify);  // 最后修改时间
-    time(&ut.actime);  //最后访问时间(当前时间)
+    QFileInfo fi(filePath);
+    QByteArray baPath= fi.absoluteFilePath().toLocal8Bit();
 
-    QByteArray ary= filePath.toLocal8Bit();
-    char *cFilePath = ary.data();
+    timespec tspec[2];
+    tspec[0].tv_nsec = UTIME_NOW;
+    tspec[1].tv_sec = dt.toMSecsSinceEpoch() / 1000;
+    tspec[1].tv_nsec = dt.toMSecsSinceEpoch() * 1000000;
 
-    if(0 == utime(cFilePath, &ut))
+    // AT_FDCWD not define in some system
+    if (0 == utimensat(/*AT_FDCWD*/0, baPath.data(), tspec, 0))
         return true;
     else
         return false;

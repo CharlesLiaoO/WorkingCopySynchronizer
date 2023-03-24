@@ -45,8 +45,9 @@ QString GetFilePathNS(const QString &path);
 /// 获取文件的后缀
 QString GetFileSuffix(const QString &path);
 
-/// 向磁盘设置文件的修改时间
-bool SetMTimeDisk(const QString &filePath, const QDateTime &dtLocal);
+/// Set file's modify time by local time.
+/// 设置文件的修改时间（使用当地时间）
+bool SetFileMTime(const QString &filePath, const QDateTime &dtLocal);
 
 /// A convenient QSettings of ini fomart. Support group arg in constructor, use utf8 econding
 /// 便利的Ini格式的QSettings。在构造函数中支持组名，使用utf8编码

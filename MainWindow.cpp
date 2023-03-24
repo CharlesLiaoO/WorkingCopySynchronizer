@@ -191,7 +191,7 @@ void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &d
         return;
     }
 
-    ret = SetMTimeDisk(destPath, srcFi.lastModified());
+    ret = SetFileMTime(destPath, srcFi.lastModified());
     if (!ret) {
         ui->plainTextEdit_MsgOutput->appendPlainText(tr("Set %1's MTime(%2) Failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
     }
