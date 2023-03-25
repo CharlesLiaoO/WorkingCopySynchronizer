@@ -25,7 +25,7 @@ private slots:
     void on_pushButton_Stop_clicked();
 
     void slTmrQueryVsc();
-    bool QPrcExe(QProcess *process, QString *mergedOutput=nullptr);
+    bool QPrcExe(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
     void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
 
 private:

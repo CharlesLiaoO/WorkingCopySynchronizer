@@ -4,6 +4,9 @@
 #include <QTimer>
 #include <QProcess>
 #include "NotPrjRel.h"
+#include <QFileInfo>
+#include <QDateTime>
+#include <QFileDialog>
 
 /// Max error of system time synchronization (ms).
 /// For the situation that use the vcs and working dir in different os,
@@ -19,8 +22,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_StateMsg->setText(tr("Stopped"));
 
     tmrQueryVsc = new QTimer(this);
-    prcQueryVsc = new QProcess(this);
+    tmrQueryVsc->setSingleShot(true);
+    tmrQueryVsc->setInterval(1000);
     connect(tmrQueryVsc, &QTimer::timeout, this, &MainWindow::slTmrQueryVsc);
+
+    prcQueryVsc = new QProcess(this);
 
     sIniPath = "setting.ini";
     IniSetting setting(sIniPath);
@@ -28,8 +34,6 @@ MainWindow::MainWindow(QWidget *parent)
     sPathWorking = setting.value("PathWorking", "").toString();
     ui->lineEdit_PathVcs->setText(sPathVcs);
     ui->lineEdit_PathWorking->setText(sPathWorking);
-
-
 }
 
 MainWindow::~MainWindow()
@@ -43,7 +47,6 @@ void MainWindow::closeEvent(QCloseEvent *e)
     Q_UNUSED(e)
 }
 
-#include <QFileDialog>
 void MainWindow::on_pushButton_PathVcsBrowse_clicked()
 {
     QString sPathLast = ui->lineEdit_PathVcs->text();
@@ -104,24 +107,25 @@ void MainWindow::on_pushButton_Start_clicked()
     }
 
     bStop = false;
-    tmrQueryVsc->start(1000);
     ui->label_StateMsg->setText(tr("Running"));
+    QCoreApplication::processEvents();
+    slTmrQueryVsc();
 }
 
 void MainWindow::on_pushButton_Stop_clicked()
 {
     bStop = true;
+    tmrQueryVsc->stop();
     ui->label_StateMsg->setText(tr("Stopped"));
-    if (tmrQueryVsc->isActive()) {
-        tmrQueryVsc->stop(); }
 }
 
-#include <QFileInfo>
-#include <QDateTime>
 void MainWindow::slTmrQueryVsc()
 {
+    if (bStop)
+        return;
+
     QString sOutput;
-    if (!QPrcExe(prcQueryVsc, &sOutput)) {
+    if (!QPrcExe(prcQueryVsc, &sOutput, -1)) {
         ui->plainTextEdit_MsgOutput->appendPlainText(sOutput);
         return;
     }
@@ -130,37 +134,52 @@ void MainWindow::slTmrQueryVsc()
     if (sVcsFileList.size() == 0)
         sVcsFileList = sOutput.split("\r", QString::SkipEmptyParts);
 
-    for (auto &sVcsFile: sVcsFileList) {
+    int size = sVcsFileList.size();
+    int nUpdateUiIntv = size / 100;
+    ui->label_FileCount->setText(QString("0/%1").arg(size));
+    for (int i=0; i < size; i++) {
+        auto &sVcsFile = sVcsFileList[i];
         if (bStop) {
             ui->label_StateMsg->setText(tr("Stopped"));
             return;
         }
 
-        sVcsFile = sVcsFile.trimmed();
+        if (sVcsFile.endsWith("\r")/* || sVcsFile.endsWith("\n")*/)
+            sVcsFile.chop(1);
         if (sVcsFile.isEmpty())
             continue;
 
         QFileInfo fiVcs(sPathVcs + "/" + sVcsFile);
-        if (fiVcs.isDir())
+        if (fiVcs.isDir() || !fiVcs.exists())  // not exists: not checkout
             continue;
+
         QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
 
         int msWorkingMt2VcsMt = fiWorking.lastModified().msecsTo(fiVcs.lastModified());
-        if (msWorkingMt2VcsMt > nMaxErrorOfSystime) {
+        if (msWorkingMt2VcsMt > nMaxErrorOfSystime || !fiWorking.exists()) {
             CopyFileIncludeMTime(fiVcs, fiWorking);
         } else if (msWorkingMt2VcsMt < - nMaxErrorOfSystime) {
             CopyFileIncludeMTime(fiWorking, fiVcs);
         }
 
-        QCoreApplication::processEvents();
+        if (i == size - 1 || i % nUpdateUiIntv == 0) {
+            ui->label_FileCount->setText(QString("%0/%1").arg(i+1).arg(size));
+            QCoreApplication::processEvents();
+        }
     }
+
+    tmrQueryVsc->start();
 }
 
-bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput)
+#include <QElapsedTimer>
+#include <QDebug>
+bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput, int timeout)
 {
     process->setProcessChannelMode(QProcess::MergedChannels);
     process->start();
-    bool ret = process->waitForFinished(3000);
+    QElapsedTimer eltm; eltm.start();
+    bool ret = process->waitForFinished(timeout);
+    qDebug()<< "QPrcExe waitForFinished" <<eltm.elapsed();
 #ifdef Q_OS_WIN
     QString cmdOutput = QString::fromLocal8Bit(process->readAll());
 #else
@@ -177,7 +196,6 @@ bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput)
     return true;
 }
 
-#include "NotPrjRel.h"
 void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi)
 {
     QString srcPath = srcFi.filePath();  //absoluteFilePath
