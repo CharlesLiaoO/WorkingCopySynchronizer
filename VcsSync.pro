@@ -21,7 +21,6 @@ INCLUDEPATH += Common
 SOURCES += \
     Common/AboutDlg.cpp \
     Common/NotPrjRel.cpp \
-    Common/SetMTimeDisk.cpp \
     Common/SettingDlg.cpp \
     main.cpp \
     MainWindow.cpp
@@ -29,7 +28,6 @@ SOURCES += \
 HEADERS += \
     Common/AboutDlg.h \
     Common/NotPrjRel.h \
-    Common/SetMTimeDisk.h \
     Common/SettingDlg.h \
     MainWindow.h
 

@@ -85,11 +85,36 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_StateMsg">
-          <property name="text">
-           <string notr="true">#State</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_StateMsg">
+            <property name="text">
+             <string notr="true">#State</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Files:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_FileCount">
+            <property name="text">
+             <string>0/0</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <spacer name="horizontalSpacer">
@@ -110,8 +135,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="res.qrc">
-            <normaloff>:/Res/images/setting.png</normaloff>:/Res/images/setting.png</iconset>
+           <iconset resource="Res/res.qrc">
+            <normaloff>:/images/setting.png</normaloff>:/images/setting.png</iconset>
           </property>
          </widget>
         </item>
@@ -190,7 +215,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="res.qrc"/>
+  <include location="Res/res.qrc"/>
  </resources>
  <connections/>
 </ui>
