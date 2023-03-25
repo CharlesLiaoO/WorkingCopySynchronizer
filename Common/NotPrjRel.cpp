@@ -19,10 +19,11 @@ QString GetFileSuffix(const QString &path)
 }
 
 #include <QDateTime>
+#include <QFileInfo>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #else
-#include <utime.h>
+#include <sys/stat.h>
 #endif
 bool SetFileMTime(const QString &filePath, const QDateTime &dtLocal)
 {

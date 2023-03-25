@@ -8,8 +8,8 @@ include(Common/IfMsvcAddUtf8.pri)
 
 include(Common/SetInstallPathAndInstall.pri)
 # Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
+#qnx: target.path = /tmp/$${TARGET}/bin
+#else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -37,7 +37,7 @@ FORMS += \
     MainWindow.ui
 
 TRANSLATIONS += \
-    Res/zh_CN.ts
+    Res/translations/zh_CN.ts
 
 #CONFIG += lrelease
 #CONFIG += embed_translations
