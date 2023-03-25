@@ -3,5 +3,6 @@
         <file>images/locale.png</file>
         <file>images/setting.png</file>
         <file>translations/qtMod_zh_CN.qm</file>
+        <file>images/VcsSync.png</file>
     </qresource>
 </RCC>

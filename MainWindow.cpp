@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setWindowIcon(QIcon("://images/VcsSync.png"));
     ui->toolButton_About->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
     ui->label_StateMsg->setText(tr("Stopped"));
 
