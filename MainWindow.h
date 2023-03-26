@@ -26,6 +26,7 @@ private slots:
 
     void slTmrQueryVsc();
     bool QPrcExe(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
+    void RemoveExistingPath(const QFileInfo &fi);
     void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
 
 private:

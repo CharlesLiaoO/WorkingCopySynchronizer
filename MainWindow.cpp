@@ -7,6 +7,8 @@
 #include <QFileInfo>
 #include <QDateTime>
 #include <QFileDialog>
+#include <QElapsedTimer>
+#include <QDebug>
 
 /// Max error of system time synchronization (ms).
 /// For the situation that use the vcs and working dir in different os,
@@ -137,7 +139,10 @@ void MainWindow::slTmrQueryVsc()
 
     int size = sVcsFileList.size();
     int nUpdateUiIntv = size / 100;
+    if (nUpdateUiIntv == 0)
+        nUpdateUiIntv = 10;
     ui->label_FileCount->setText(QString("0/%1").arg(size));
+
     for (int i=0; i < size; i++) {
         auto &sVcsFile = sVcsFileList[i];
         if (bStop) {
@@ -151,10 +156,24 @@ void MainWindow::slTmrQueryVsc()
             continue;
 
         QFileInfo fiVcs(sPathVcs + "/" + sVcsFile);
-        if (fiVcs.isDir() || !fiVcs.exists())  // not exists: not checkout
-            continue;
-
         QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
+
+        // not exists: not checkout or deleted
+        if (!fiVcs.exists()) {
+            RemoveExistingPath(fiWorking);
+            continue;
+        }
+
+        // git has no dir; vcs is dir: overwrite working file or dir
+        if (vcs != vcs_git && fiVcs.isDir()) {
+            if (fiWorking.isFile())
+                QFile::remove(fiWorking.filePath());
+            if (!fiWorking.exists()) {
+                QDir dir;
+                dir.mkpath(fiWorking.absolutePath());
+            }
+            continue;
+        }
 
         int msWorkingMt2VcsMt = fiWorking.lastModified().msecsTo(fiVcs.lastModified());
         if (msWorkingMt2VcsMt > nMaxErrorOfSystime || !fiWorking.exists()) {
@@ -172,8 +191,6 @@ void MainWindow::slTmrQueryVsc()
     tmrQueryVsc->start();
 }
 
-#include <QElapsedTimer>
-#include <QDebug>
 bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput, int timeout)
 {
     process->setProcessChannelMode(QProcess::MergedChannels);
@@ -197,14 +214,25 @@ bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput, int timeout)
     return true;
 }
 
+void MainWindow::RemoveExistingPath(const QFileInfo &fi)
+{
+    if (!fi.exists())
+        return;
+
+    if (fi.isFile())
+        QFile::remove(fi.filePath());  // can not remove dir
+    else {
+        QDir dir(fi.filePath());
+        dir.removeRecursively();  // may take a lot of time
+    }
+}
+
 void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi)
 {
     QString srcPath = srcFi.filePath();  //absoluteFilePath
     QString destPath = destFi.filePath();
 
-    if (QFile::exists(destPath)) {
-        QFile::remove(destPath);  //can remove dir??
-    }
+    RemoveExistingPath(destFi);
 
     QDir dirDest = destFi.dir();
     if (!dirDest.exists())
