@@ -14,19 +14,15 @@ SettingDlg::SettingDlg(QWidget *parent) :
     ui->label_LangIcon->setPixmap(QPixmap("://images/locale.png").scaledToHeight(20));
 
     ui->comboBox_Lang->blockSignals(true);
-//    QStringList langList;
-//    langList<< "System";
-//    langList<< "Chinese";
-//    langList<< "English";
-//    ui->comboBox_Lang->addItems(langList);
 
     ui->comboBox_Lang->addItem(tr("System"), "System");
     ui->comboBox_Lang->addItem("Chinese(中文)", "Chinese");
     ui->comboBox_Lang->addItem("English", "English");
 
-    IniSetting cfg("config.ini");
-    int idx = ui->comboBox_Lang->findData(cfg.value("language", "System").toString());
+    IniSetting setting("setting.ini");
+    int idx = ui->comboBox_Lang->findData(setting.value("language", "System").toString());
     ui->comboBox_Lang->setCurrentIndex(idx);
+
     ui->comboBox_Lang->blockSignals(false);
 }
 
@@ -37,9 +33,9 @@ SettingDlg::~SettingDlg()
 
 void SettingDlg::on_comboBox_Lang_currentIndexChanged(int index)
 {
-    IniSetting cfg("config.ini");
+    IniSetting setting("setting.ini");
     QString sLang = ui->comboBox_Lang->itemData(index).toString();
-    cfg.setValue("language", sLang);
+    setting.setValue("language", sLang);
 
     QMessageBox::information(this, "", tr("Take effect after restart"));
     accept();

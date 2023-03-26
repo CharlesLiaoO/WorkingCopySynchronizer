@@ -21,19 +21,19 @@ INCLUDEPATH += Common
 SOURCES += \
     Common/AboutDlg.cpp \
     Common/NotPrjRel.cpp \
-    Common/SettingDlg.cpp \
+    SettingDlg.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     Common/AboutDlg.h \
     Common/NotPrjRel.h \
-    Common/SettingDlg.h \
+    SettingDlg.h \
     MainWindow.h
 
 FORMS += \
     Common/AboutDlg.ui \
-    Common/SettingDlg.ui \
+    SettingDlg.ui \
     MainWindow.ui
 
 TRANSLATIONS += \

@@ -29,6 +29,9 @@ private slots:
     void RemoveExistingPath(const QFileInfo &fi);
     void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
 
+    void on_toolButton_Setting_clicked();
+    void on_toolButton_About_clicked();
+
 private:
     Ui::MainWindow *ui;
 

@@ -249,3 +249,17 @@ void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &d
         ui->plainTextEdit_MsgOutput->appendPlainText(tr("Set %1's MTime(%2) Failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
     }
 }
+
+#include <SettingDlg.h>
+void MainWindow::on_toolButton_Setting_clicked()
+{
+    SettingDlg settingDlg(this);
+    settingDlg.exec();
+}
+
+#include <AboutDlg.h>
+void MainWindow::on_toolButton_About_clicked()
+{
+    AboutDlg aboutDlg(this);
+    aboutDlg.exec();
+}
