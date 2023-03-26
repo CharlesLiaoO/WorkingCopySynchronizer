@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QDateTime>
 #include <QFileDialog>
+#include <QFileSystemWatcherEx.h>
 #include <QElapsedTimer>
 #include <QDebug>
 
@@ -37,6 +38,14 @@ MainWindow::MainWindow(QWidget *parent)
     sPathWorking = setting.value("PathWorking", "").toString();
     ui->lineEdit_PathVcs->setText(sPathVcs);
     ui->lineEdit_PathWorking->setText(sPathWorking);
+
+    watcherVcs = new QFileSystemWatcherEx(this);
+    connect(watcherVcs, &QFileSystemWatcher::fileChanged, this, &MainWindow::slWatcherVcs_FileChanged);
+    connect(watcherVcs, &QFileSystemWatcher::directoryChanged, this, &MainWindow::slWatcherVcs_DirChanged);
+
+    watcherWorking = new QFileSystemWatcherEx(this);
+    connect(watcherWorking, &QFileSystemWatcher::fileChanged, this, &MainWindow::slWatcherWorking_FileChanged);
+    connect(watcherWorking, &QFileSystemWatcher::directoryChanged, this, &MainWindow::slWatcherWorking_DirChanged);
 }
 
 MainWindow::~MainWindow()
@@ -188,7 +197,8 @@ void MainWindow::slTmrQueryVsc()
         }
     }
 
-    tmrQueryVsc->start();
+//    tmrQueryVsc->start();
+    StartWatchPaths(sVcsFileList);
 }
 
 bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput, int timeout)
@@ -248,6 +258,55 @@ void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &d
     if (!ret) {
         ui->plainTextEdit_MsgOutput->appendPlainText(tr("Set %1's MTime(%2) Failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
     }
+}
+
+void MainWindow::StartWatchPaths(QStringList &paths)
+{
+    QStringList pathsWatch;
+
+    int lastDirIdx = 0;
+    for (int i=0; i<paths.size(); i++) {
+        const QString &path = paths.at(i);
+        if (vcs == vcs_git) {
+            int lastSlash = path.lastIndexOf("/");
+            if (lastSlash > -1) {
+                QString pathDir = path.mid(0, lastSlash);
+                if (paths.at(lastDirIdx) != pathDir) {
+                    lastDirIdx = i;
+                    paths.insert(i, pathDir);
+                }
+            }
+        }
+        pathsWatch << sPathVcs + "/" + path;
+    }
+    watcherVcs->addPaths(pathsWatch);
+}
+
+// Qt doc[not exact]{exact}: The fileChanged() signal is emitted when a file has been modified, renamed or removed from disk. Similarly, the directoryChanged() signal is emitted when [a directory or its contents is modified or removed] {its contents is added or removed}. Note that QFileSystemWatcher stops monitoring files once they have been renamed or removed from disk {if withdraw remove/rename, can NOT monitor again}, and directories once they have been removed from disk {if withdraw remove, can monitor again}.
+
+void MainWindow::slWatcherVcs_FileChanged(const QString &path)
+{
+    // file changed/removed(rename); path is file's path
+    QFileInfo fi(path);
+    qDebug()<< fi.filePath();
+//    CopyFileIncludeMTime(fi, );
+}
+
+void MainWindow::slWatcherVcs_DirChanged(const QString &path)
+{
+    // file or subdir added/deleted in directory; path is directory's path
+    QFileInfo fi(path);
+    qDebug()<< fi.filePath();
+}
+
+void MainWindow::slWatcherWorking_FileChanged(const QString &path)
+{
+
+}
+
+void MainWindow::slWatcherWorking_DirChanged(const QString &path)
+{
+
 }
 
 #include <SettingDlg.h>

@@ -21,6 +21,7 @@ INCLUDEPATH += Common
 SOURCES += \
     Common/AboutDlg.cpp \
     Common/NotPrjRel.cpp \
+    Common/QFileSystemWatcherEx.cpp \
     SettingDlg.cpp \
     main.cpp \
     MainWindow.cpp
@@ -28,6 +29,7 @@ SOURCES += \
 HEADERS += \
     Common/AboutDlg.h \
     Common/NotPrjRel.h \
+    Common/QFileSystemWatcherEx.h \
     SettingDlg.h \
     MainWindow.h
 

@@ -9,6 +9,7 @@ QT_END_NAMESPACE
 
 class QProcess;
 class QFileInfo;
+class QFileSystemWatcherEx;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -29,6 +30,13 @@ private slots:
     void RemoveExistingPath(const QFileInfo &fi);
     void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
 
+    void StartWatchPaths(QStringList &paths);
+//    void slWatcherContentChanged();
+    void slWatcherVcs_FileChanged(const QString &path);
+    void slWatcherVcs_DirChanged(const QString &path);
+    void slWatcherWorking_FileChanged(const QString &path);
+    void slWatcherWorking_DirChanged(const QString &path);
+
     void on_toolButton_Setting_clicked();
     void on_toolButton_About_clicked();
 
@@ -42,6 +50,9 @@ private:
     bool bStop;
     QTimer *tmrQueryVsc;
     QProcess *prcQueryVsc;
+
+    QFileSystemWatcherEx *watcherVcs;
+    QFileSystemWatcherEx *watcherWorking;
 
     enum VCS {
         vcs_NA,
