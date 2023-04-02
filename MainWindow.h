@@ -24,8 +24,11 @@ private slots:
     void on_pushButton_Start_clicked();
     void on_pushButton_Stop_clicked();
 
-    void slTmrQueryVsc();
-    bool QPrcExe(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
+    bool QPrcExeSync(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
+    QString WrapQPrcErrMsg(QProcess *process, const QString &argSep="§");
+    void slPrcQueryVscFinished(int exitCode, int exitStatus);    void slTmrQueryVsc();
+    QStringList QStringSplitNewline(const QString &str);
+
     void RemoveExistingPath(const QFileInfo &fi);
     void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
 

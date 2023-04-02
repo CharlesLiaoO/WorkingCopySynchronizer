@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(tmrQueryVsc, &QTimer::timeout, this, &MainWindow::slTmrQueryVsc);
 
     prcQueryVsc = new QProcess(this);
+    connect(prcQueryVsc, (void(QProcess::*)(int, QProcess::ExitStatus))&QProcess::finished, this, &MainWindow::slPrcQueryVscFinished);
 
     sIniPath = "setting.ini";
     IniSetting setting(sIniPath);
@@ -71,18 +72,19 @@ void MainWindow::on_pushButton_Start_clicked()
     sPathVcs = ui->lineEdit_PathVcs->text();
     sPathWorking = ui->lineEdit_PathWorking->text();
 
-    prcQueryVsc->setWorkingDirectory(sPathVcs);
+    QProcess prcIdnetifyVsc;
+    prcIdnetifyVsc.setWorkingDirectory(sPathVcs);
     vcs = vcs_NA;
     if (vcs == vcs_NA) {
-        prcQueryVsc->setProgram("git");
-        prcQueryVsc->setArguments({"rev-parse", "--is-inside-work-tree"});
-        if (QPrcExe(prcQueryVsc))
+        prcIdnetifyVsc.setProgram("git");
+        prcIdnetifyVsc.setArguments({"rev-parse", "--is-inside-work-tree"});
+        if (QPrcExeSync(&prcIdnetifyVsc))
             vcs = vcs_git;
     }
     if (vcs == vcs_NA) {
-        prcQueryVsc->setProgram("svn");
-        prcQueryVsc->setArguments({"info"});
-        if (QPrcExe(prcQueryVsc))
+        prcIdnetifyVsc.setProgram("svn");
+        prcIdnetifyVsc.setArguments({"info"});
+        if (QPrcExeSync(&prcIdnetifyVsc))
             vcs = vcs_svn;
     }
     if (vcs == vcs_NA) {
@@ -110,8 +112,8 @@ void MainWindow::on_pushButton_Start_clicked()
     }
 
     bStop = false;
+    ui->label_FileCount->setText("0/0");
     ui->label_StateMsg->setText(tr("Running"));
-    QCoreApplication::processEvents();
     slTmrQueryVsc();
 }
 
@@ -119,6 +121,8 @@ void MainWindow::on_pushButton_Stop_clicked()
 {
     bStop = true;
     tmrQueryVsc->stop();
+    if (prcQueryVsc->state() != QProcess::NotRunning)
+        prcQueryVsc->kill();
     ui->label_StateMsg->setText(tr("Stopped"));
 }
 
@@ -127,15 +131,37 @@ void MainWindow::slTmrQueryVsc()
     if (bStop)
         return;
 
-    QString sOutput;
-    if (!QPrcExe(prcQueryVsc, &sOutput, -1)) {
-        ui->plainTextEdit_MsgOutput->appendPlainText(sOutput);
+    prcQueryVsc->start();
+}
+
+bool MainWindow::QPrcExeSync(QProcess *process, QString *mergedOutput, int timeout)
+{
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    process->start();
+    //    QElapsedTimer eltm; eltm.start();
+    bool ret = process->waitForFinished(timeout);
+    //    qDebug()<< "QPrcExe waitForFinished" <<eltm.elapsed();
+
+    if (!ret || process->exitCode() != 0 || process->exitStatus() != QProcess::NormalExit) {
+        if (mergedOutput)
+            *mergedOutput = WrapQPrcErrMsg(process);
+        return false;
+    } else {
+        if (mergedOutput)
+            *mergedOutput = QString::fromLocal8Bit(process->readAllStandardOutput());
+        return true;
+    }
+}
+
+void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
+{
+    QProcess *process = (QProcess *)sender();
+    if (exitCode != 0 || exitStatus != QProcess::NormalExit) {
+        ui->plainTextEdit_MsgOutput->appendPlainText(WrapQPrcErrMsg(process));
         return;
     }
 
-    QStringList sVcsFileList = sOutput.split("\n", QString::SkipEmptyParts);
-    if (sVcsFileList.size() == 0)
-        sVcsFileList = sOutput.split("\r", QString::SkipEmptyParts);
+    QStringList sVcsFileList = QStringSplitNewline(QString::fromLocal8Bit(process->readAllStandardOutput()));
 
     int size = sVcsFileList.size();
     int nUpdateUiIntv = size / 100;
@@ -146,14 +172,8 @@ void MainWindow::slTmrQueryVsc()
     for (int i=0; i < size; i++) {
         auto &sVcsFile = sVcsFileList[i];
         if (bStop) {
-            ui->label_StateMsg->setText(tr("Stopped"));
             return;
         }
-
-        if (sVcsFile.endsWith("\r")/* || sVcsFile.endsWith("\n")*/)
-            sVcsFile.chop(1);
-        if (sVcsFile.isEmpty())
-            continue;
 
         QFileInfo fiVcs(sPathVcs + "/" + sVcsFile);
         QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
@@ -164,7 +184,7 @@ void MainWindow::slTmrQueryVsc()
             continue;
         }
 
-        // git has no dir; vcs is dir: overwrite working file or dir
+        // git has no dir; dir: overwrite working file or dir
         if (vcs != vcs_git && fiVcs.isDir()) {
             if (fiWorking.isFile())
                 QFile::remove(fiWorking.filePath());
@@ -191,27 +211,25 @@ void MainWindow::slTmrQueryVsc()
     tmrQueryVsc->start();
 }
 
-bool MainWindow::QPrcExe(QProcess *process, QString *mergedOutput, int timeout)
+QString MainWindow::WrapQPrcErrMsg(QProcess *process, const QString &argSep)
 {
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    process->start();
-    QElapsedTimer eltm; eltm.start();
-    bool ret = process->waitForFinished(timeout);
-    qDebug()<< "QPrcExe waitForFinished" <<eltm.elapsed();
-#ifdef Q_OS_WIN
-    QString cmdOutput = QString::fromLocal8Bit(process->readAll());
-#else
-    QString cmdOutput = process->readAll();
-#endif
-    if (mergedOutput) *mergedOutput = cmdOutput;
+    QString err = tr("QProcess %1(%2) exe err: %3").arg(process->program(),
+                                                        process->arguments().join(argSep),
+                                                        QString::fromLocal8Bit(process->readAllStandardError()));
+    return err;
+}
 
-    if (!ret || process->exitCode() != 0 || process->exitStatus() != QProcess::NormalExit) {
-        QString args = process->arguments().join("§");
-        QString err = tr("QProcess Exe(Prg: %1 Args: %2) err: %3").arg(process->program(), args, cmdOutput);
-        if (mergedOutput) *mergedOutput = err;
-        return false;
-    }
-    return true;
+QStringList MainWindow::QStringSplitNewline(const QString &str)
+{
+#if defined(Q_OS_WIN)
+    QString sepChar = "\r\n";
+#elif defined(Q_OS_UNIX)
+    QString sepChar = "\n";
+#else
+    QString sepChar = "\r";
+#endif
+    QStringList ret = str.split(sepChar, QString::SkipEmptyParts);
+    return ret;
 }
 
 void MainWindow::RemoveExistingPath(const QFileInfo &fi)
