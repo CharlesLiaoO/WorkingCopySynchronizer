@@ -227,12 +227,17 @@ QString MainWindow::WrapQPrcErrMsg(QProcess *process, const QString &argSep)
 QStringList MainWindow::QStringSplitNewline(const QString &str)
 {
 #if defined(Q_OS_WIN)
-    QString sepChar = "\r\n";
+    QString sepChar;
+    if (vcs == vcs_git)
+        sepChar = "\n";
+    else
+        sepChar = "\r\n";
 #elif defined(Q_OS_UNIX)
     QString sepChar = "\n";
 #else
     QString sepChar = "\r";
 #endif
+
     QStringList ret = str.split(sepChar, QString::SkipEmptyParts);
     return ret;
 }
