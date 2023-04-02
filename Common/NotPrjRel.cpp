@@ -79,9 +79,11 @@ IniSetting::IniSetting(const QString &iniFilePath, const QString &groupName, QOb
 
 IniSetting::~IniSetting()
 {
+    if (!QFileInfo::exists(iniFilePath))
+        return;  // avoid warning msg
     sync();  // Another sync() call in QSetting's destructor will not do actual work, because there's a IfChanged flag in sync()
 #ifdef Q_OS_UNIX
     if (sysFileSync)
-        system(QString("sync -d %1").arg(iniFilePath).toStdString().c_str());
+        system(QString("sync %1").arg(iniFilePath).toStdString().c_str());
 #endif
 }
