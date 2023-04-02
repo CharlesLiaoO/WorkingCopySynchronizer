@@ -150,9 +150,9 @@ bool MainWindow::QPrcExeSync(QProcess *process, QString *mergedOutput, int timeo
 {
     process->setProcessChannelMode(QProcess::MergedChannels);
     process->start();
-    //    QElapsedTimer eltm; eltm.start();
+//    QElapsedTimer eltm; eltm.start();
     bool ret = process->waitForFinished(timeout);
-    //    qDebug()<< "QPrcExe waitForFinished" <<eltm.elapsed();
+//    qDebug()<< __FUNCTION__ <<eltm.elapsed();
 
     if (!ret || process->exitCode() != 0 || process->exitStatus() != QProcess::NormalExit) {
         if (mergedOutput)
@@ -208,9 +208,9 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
 
         int msWorkingMt2VcsMt = fiWorking.lastModified().msecsTo(fiVcs.lastModified());
         if (msWorkingMt2VcsMt > nMaxErrorOfSystime || !fiWorking.exists()) {
-            CopyFileIncludeMTime(fiVcs, fiWorking);
+            CopyFileAndMTime(fiVcs, fiWorking);
         } else if (msWorkingMt2VcsMt < - nMaxErrorOfSystime) {
-            CopyFileIncludeMTime(fiWorking, fiVcs);
+            CopyFileAndMTime(fiWorking, fiVcs);
         }
 
         if (i == size - 1 || i % nUpdateUiIntv == 0) {
@@ -263,20 +263,7 @@ void MainWindow::DispMsg(const QString &msg, bool err)
     }
 }
 
-void MainWindow::RemoveExistingPath(const QFileInfo &fi)
-{
-    if (!fi.exists())
-        return;
-
-    if (fi.isFile())
-        QFile::remove(fi.filePath());  // can not remove dir
-    else {
-        QDir dir(fi.filePath());
-        dir.removeRecursively();  // may take a lot of time
-    }
-}
-
-void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi)
+void MainWindow::CopyFileAndMTime(const QFileInfo &srcFi, const QFileInfo &destFi)
 {
     QString srcPath = srcFi.filePath();  //absoluteFilePath
     QString destPath = destFi.filePath();

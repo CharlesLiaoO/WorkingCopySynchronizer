@@ -1,5 +1,9 @@
 ﻿#include "NotPrjRel.h"
 
+#include <QFileInfo>
+#include <QDir>
+#include <QDateTime>
+
 QString GetFileNameNS(const QString &path)
 {
     QString unixPath = path;
@@ -18,8 +22,23 @@ QString GetFileSuffix(const QString &path)
     return path.mid(path.lastIndexOf('.') + 1);
 }
 
-#include <QDateTime>
-#include <QFileInfo>
+void RemoveExistingPath(const QFileInfo &fi)
+{
+    if (!fi.exists())
+        return;
+
+    if (fi.isFile()) {
+#ifdef Q_OS_WIN
+        if (!fi.isWritable())
+            QFile::setPermissions(fi.filePath(), QFileDevice::WriteOther | QFileDevice::ReadOther);
+#endif
+        QFile::remove(fi.filePath());  // can not remove dir
+    } else {
+        QDir dir(fi.filePath());
+        dir.removeRecursively();  // may take a lot of time
+    }
+}
+
 #ifdef Q_OS_WIN
 #include <windows.h>
 #else

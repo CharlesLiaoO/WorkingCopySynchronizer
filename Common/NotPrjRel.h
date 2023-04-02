@@ -2,7 +2,6 @@
 #define NOTPRJREL_H
 
 #include <QLocale>
-#include <QProcess>
 #include <QSettings>
 
 // Not Project Related APIs
@@ -44,6 +43,9 @@ QString GetFilePathNS(const QString &path);
 /// Get file suffix
 /// 获取文件的后缀
 QString GetFileSuffix(const QString &path);
+
+class QFileInfo;
+void RemoveExistingPath(const QFileInfo &fi);
 
 /// Set file's modify time by local time.
 /// 设置文件的修改时间（使用当地时间）

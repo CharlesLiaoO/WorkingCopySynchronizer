@@ -30,8 +30,7 @@ private slots:
     QStringList QStringSplitNewline(const QString &str);
     void DispMsg(const QString &msg, bool err=true);
 
-    void RemoveExistingPath(const QFileInfo &fi);
-    void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
+    void CopyFileAndMTime(const QFileInfo &srcFi, const QFileInfo &destFi);
 
     void on_toolButton_Setting_clicked();
     void on_toolButton_About_clicked();
