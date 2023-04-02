@@ -111,15 +111,17 @@ void MainWindow::on_pushButton_Start_clicked()
     switch (vcs) {
     case vcs_git:
         prcQueryVsc->setProgram("git");
-        prcQueryVsc->setArguments({"ls-files"});
+        sQueryArgList = QStringList{"ls-files"};
+        sQueryArgList = QStringList{"ls-tree", "-r", "--name-only", "HEAD"};  // without cached changes
         break;
     case vcs_svn:
         prcQueryVsc->setProgram("svn");
-        prcQueryVsc->setArguments({"list", "-R"});
+        sQueryArgList = QStringList{"list", "-R"};
         break;
     default:
         break;
     }
+    prcQueryVsc->setArguments(sQueryArgList);
 
     bStop = false;
     ui->label_FileCount->setText("0/0");
@@ -143,6 +145,7 @@ void MainWindow::slTmrQueryVsc()
     if (bStop)
         return;
 
+    bAppendDeal = false;
     prcQueryVsc->start();
 }
 
@@ -173,7 +176,19 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         return;
     }
 
-    QStringList sVcsFileList = QStringSplitNewline(QString::fromLocal8Bit(process->readAllStandardOutput()));
+    if (!bAppendDeal) {
+        sVcsFileList = QStringSplitNewline(QString::fromLocal8Bit(process->readAllStandardOutput()));
+        if (vcs == vcs_svn) {
+            bAppendDeal = true;
+            process->setArguments({"st", "-q"});
+            process->start();
+            return;
+        }
+    } else {
+        AppendDeal(QString::fromLocal8Bit(process->readAllStandardOutput()));
+        prcQueryVsc->setArguments(sQueryArgList);
+        bAppendDeal = false;
+    }
 
     int size = sVcsFileList.size();
     int nUpdateUiIntv = size / 100;
@@ -224,6 +239,20 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         on_pushButton_Stop_clicked();  //set stopped state
     } else
         tmrQueryVsc->start();
+}
+
+void MainWindow::AppendDeal(const QString &msg)
+{
+    QStringList slTmp = QStringSplitNewline(msg);
+    for (auto &sFileChange: slTmp) {
+        if (sFileChange.startsWith("A")) {
+            sVcsFileList.append(sFileChange.mid(8));
+        }
+        // svn list already excluded the deleted files
+//        else if (sFileChange.startsWith("D") || sFileChange.startsWith("!")) {
+//            sVcsFileList.removeOne(sFileChange.mid(8));
+//        }
+    }
 }
 
 QString MainWindow::WrapQPrcErrMsg(QProcess *process, const QString &argSep)

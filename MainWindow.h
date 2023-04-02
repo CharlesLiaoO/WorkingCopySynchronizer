@@ -48,6 +48,11 @@ private:
     bool bStop;
     QTimer *tmrQueryVsc;
     QProcess *prcQueryVsc;
+    QStringList sQueryArgList;
+    QStringList sVcsFileList;
+
+    bool bAppendDeal;
+    void AppendDeal(const QString &msg);
 
     bool bRunOnce;
 
