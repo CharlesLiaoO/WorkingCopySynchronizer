@@ -24,6 +24,8 @@ QString GetFileSuffix(const QString &path)
 #include <windows.h>
 #else
 #include <sys/stat.h>
+#include <errno.h>
+extern int errno;
 #endif
 bool SetFileMTime(const QString &filePath, const QDateTime &dtLocal)
 {
@@ -57,13 +59,16 @@ bool SetFileMTime(const QString &filePath, const QDateTime &dtLocal)
     timespec tspec[2];
     tspec[0].tv_nsec = UTIME_NOW;
     tspec[1].tv_sec = dt.toMSecsSinceEpoch() / 1000;
-    tspec[1].tv_nsec = dt.toMSecsSinceEpoch() * 1000000;
+    tspec[1].tv_nsec = dt.toMSecsSinceEpoch() % 1000 * 1000000;
 
     // AT_FDCWD not define in some system
-    if (0 == utimensat(/*AT_FDCWD*/0, baPath.data(), tspec, 0))
+    int ret = utimensat(/*AT_FDCWD*/0, baPath.constData(), tspec, 0);
+    if (0 == ret)
         return true;
-    else
+    else {
+        qDebug("%s", strerror(errno));
         return false;
+    }
 #endif
 }
 
