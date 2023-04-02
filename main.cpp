@@ -7,6 +7,8 @@
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);  // linux need but window not
+
     QApplication a(argc, argv);
 
 #ifdef Q_OS_UNIX
