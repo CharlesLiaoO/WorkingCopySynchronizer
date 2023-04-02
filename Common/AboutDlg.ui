@@ -18,7 +18,7 @@
     <widget class="QPlainTextEdit" name="plainTextEdit">
      <property name="plainText">
       <string notr="true">Email: LiaoChengO@qq.com
-https://github.com/CharlesLiaoO/EncodingConverter
+https://github.com/CharlesLiaoO
 Build with Qt/C++</string>
      </property>
      <property name="textInteractionFlags">

@@ -26,7 +26,8 @@ private slots:
 
     bool QPrcExeSync(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
     QString WrapQPrcErrMsg(QProcess *process, const QString &argSep="§");
-    void slPrcQueryVscFinished(int exitCode, int exitStatus);    void slTmrQueryVsc();
+    void slTmrQueryVsc();
+    void slPrcQueryVscFinished(int exitCode, int exitStatus);
     QStringList QStringSplitNewline(const QString &str);
     void DispMsg(const QString &msg, bool err=true);
 
