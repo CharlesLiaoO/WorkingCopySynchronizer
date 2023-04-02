@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
+#include <QStyle>
 #include <QTimer>
 #include <QProcess>
 #include "NotPrjRel.h"
