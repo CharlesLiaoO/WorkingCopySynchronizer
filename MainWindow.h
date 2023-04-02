@@ -23,6 +23,7 @@ private slots:
     void on_pushButton_PathWorkingBrowse_clicked();
     void on_pushButton_Start_clicked();
     void on_pushButton_Stop_clicked();
+    void on_checkBox_RunOnce_toggled(bool checked);
 
     bool QPrcExeSync(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
     QString WrapQPrcErrMsg(QProcess *process, const QString &argSep="§");
@@ -36,10 +37,14 @@ private slots:
     void on_toolButton_Setting_clicked();
     void on_toolButton_About_clicked();
 
-    void on_checkBox_RunOnce_toggled(bool checked);
-
 private:
     Ui::MainWindow *ui;
+
+    enum VCS {
+        vcs_NA,
+        vcs_git,
+        vcs_svn,
+    } vcs;
 
     QString sPathVcs;
     QString sPathWorking;
@@ -56,10 +61,10 @@ private:
 
     bool bRunOnce;
 
-    enum VCS {
-        vcs_NA,
-        vcs_git,
-        vcs_svn,
-    } vcs;
+    int nCurVcsFileIdx;
+    int nVcsFileCount;
+    void UpdateUiInLoop(int fiIdx, bool copyed);
+    QTimer *tmrUuInLoop;
+    void UpdateFileCountLabel();
 };
 #endif // MAINWINDOW_H

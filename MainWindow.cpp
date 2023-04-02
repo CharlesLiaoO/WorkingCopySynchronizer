@@ -17,6 +17,7 @@
 /// they have error in the synchronization of 2 os.
 int nMaxErrorOfSystime = 500;
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -30,6 +31,13 @@ MainWindow::MainWindow(QWidget *parent)
     tmrQueryVsc->setSingleShot(true);
     tmrQueryVsc->setInterval(2000);
     connect(tmrQueryVsc, &QTimer::timeout, this, &MainWindow::slTmrQueryVsc);
+
+    tmrUuInLoop = new QTimer(this);
+    tmrUuInLoop->setInterval(500);
+    connect(tmrUuInLoop, &QTimer::timeout, this, [&](){
+        UpdateFileCountLabel();
+//        qDebug()<< QTime::currentTime()<< "timeout";
+    });
 
     prcQueryVsc = new QProcess(this);
     connect(prcQueryVsc, (void(QProcess::*)(int, QProcess::ExitStatus))&QProcess::finished, this, &MainWindow::slPrcQueryVscFinished);
@@ -124,7 +132,6 @@ void MainWindow::on_pushButton_Start_clicked()
     prcQueryVsc->setArguments(sQueryArgList);
 
     bStop = false;
-    ui->label_FileCount->setText("0/0");
     ui->label_StateMsg->setText(tr("Running"));
     slTmrQueryVsc();
 }
@@ -132,6 +139,7 @@ void MainWindow::on_pushButton_Start_clicked()
 void MainWindow::on_pushButton_Stop_clicked()
 {
     bStop = true;
+    tmrUuInLoop->stop();
     tmrQueryVsc->stop();
     if (prcQueryVsc->state() != QProcess::NotRunning)
         prcQueryVsc->kill();
@@ -140,10 +148,19 @@ void MainWindow::on_pushButton_Stop_clicked()
     ui->checkBox_RunOnce->setEnabled(true);
 }
 
+void MainWindow::on_checkBox_RunOnce_toggled(bool checked)
+{
+    bRunOnce = checked;
+    IniSetting setting(sIniPath);
+    setting.setValue("RunOnce", bRunOnce);
+}
+
 void MainWindow::slTmrQueryVsc()
 {
     if (bStop)
         return;
+
+    ui->label_FileCount->setText("0/0");
 
     bAppendDeal = false;
     prcQueryVsc->start();
@@ -190,19 +207,22 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         bAppendDeal = false;
     }
 
-    int size = sVcsFileList.size();
-    int nUpdateUiIntv = size / 100;
-    if (nUpdateUiIntv == 0)
-        nUpdateUiIntv = 10;
-    ui->label_FileCount->setText(QString("0/%1").arg(size));
+    nVcsFileCount = sVcsFileList.size();
+    ui->label_FileCount->setText(QString("0/%1").arg(nVcsFileCount));
+    QCoreApplication::processEvents();
+    tmrUuInLoop->start();
 
-    for (int i=0; i < size; i++) {
+    bool copyedLastTime = false;
+    int &i = nCurVcsFileIdx;
+    for (i=0; i < nVcsFileCount; i++) {
         auto &sVcsFile = sVcsFileList[i];
         if (bStop)
             return;
 
         QFileInfo fiVcs(sPathVcs + "/" + sVcsFile);
         QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
+
+        UpdateUiInLoop(i, copyedLastTime);
 
         // not exists: not checkout or deleted
         if (!fiVcs.exists()) {
@@ -224,16 +244,15 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         int msWorkingMt2VcsMt = fiWorking.lastModified().msecsTo(fiVcs.lastModified());
         if (msWorkingMt2VcsMt > nMaxErrorOfSystime || !fiWorking.exists()) {
             CopyFileAndMTime(fiVcs, fiWorking);
+            copyedLastTime = true;
         } else if (msWorkingMt2VcsMt < - nMaxErrorOfSystime) {
             CopyFileAndMTime(fiWorking, fiVcs);
-        }
-
-        if (i == size - 1 || i % nUpdateUiIntv == 0) {
-            ui->label_FileCount->setText(QString("%0/%1").arg(i+1).arg(size));
-            QCoreApplication::processEvents();
-            QThread::msleep(1);  // reduce cpu usage, takes <=100ms for whole 'for' loop
-        }
+            copyedLastTime = true;
+        } else
+            copyedLastTime = false;
     }
+
+    tmrUuInLoop->stop();
 
     if (bRunOnce) {
         on_pushButton_Stop_clicked();  //set stopped state
@@ -253,6 +272,33 @@ void MainWindow::AppendDeal(const QString &msg)
 //            sVcsFileList.removeOne(sFileChange.mid(8));
 //        }
     }
+}
+
+void MainWindow::UpdateUiInLoop(int fiIdx, bool copyed)
+{
+    // intv value based on computer performance
+    static int nIntvToSleep = 99;
+    static int nIntvToPrcEvts = 999;
+
+    if (fiIdx % nIntvToSleep == 0)
+        QThread::msleep(1);  // reduce cpu usage
+
+    // QCoreApplication::processEvents(): for user interact or tmrUu
+    if (copyed) {
+        QCoreApplication::processEvents();  // when copyed, processEvents immediately
+//        qDebug()<< QTime::currentTime()<< "copyed";
+    } else if (fiIdx % nIntvToPrcEvts == 0)
+        QCoreApplication::processEvents();
+
+    if (fiIdx == nVcsFileCount - 1) {
+        UpdateFileCountLabel();
+//        qDebug()<< QTime::currentTime()<< "last one ---------";
+    }
+}
+
+void MainWindow::UpdateFileCountLabel()
+{
+    ui->label_FileCount->setText(QString("%1/%2").arg(nCurVcsFileIdx + 1).arg(nVcsFileCount));
 }
 
 QString MainWindow::WrapQPrcErrMsg(QProcess *process, const QString &argSep)
@@ -327,11 +373,4 @@ void MainWindow::on_toolButton_About_clicked()
 {
     AboutDlg aboutDlg(this);
     aboutDlg.exec();
-}
-
-void MainWindow::on_checkBox_RunOnce_toggled(bool checked)
-{
-    bRunOnce = checked;
-    IniSetting setting(sIniPath);
-    setting.setValue("RunOnce", bRunOnce);
 }
