@@ -28,6 +28,7 @@ private slots:
     QString WrapQPrcErrMsg(QProcess *process, const QString &argSep="§");
     void slPrcQueryVscFinished(int exitCode, int exitStatus);    void slTmrQueryVsc();
     QStringList QStringSplitNewline(const QString &str);
+    void DispMsg(const QString &msg, bool err=true);
 
     void RemoveExistingPath(const QFileInfo &fi);
     void CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &destFi);

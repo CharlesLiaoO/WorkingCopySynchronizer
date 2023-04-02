@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QFileDialog>
 #include <QElapsedTimer>
+#include <QThread>
 #include <QDebug>
 
 /// Max error of system time synchronization (ms).
@@ -26,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     tmrQueryVsc = new QTimer(this);
     tmrQueryVsc->setSingleShot(true);
-    tmrQueryVsc->setInterval(1000);
+    tmrQueryVsc->setInterval(2000);
     connect(tmrQueryVsc, &QTimer::timeout, this, &MainWindow::slTmrQueryVsc);
 
     prcQueryVsc = new QProcess(this);
@@ -69,6 +70,8 @@ void MainWindow::on_pushButton_PathWorkingBrowse_clicked()
 
 void MainWindow::on_pushButton_Start_clicked()
 {
+    ui->pushButton_Start->setEnabled(false);
+
     sPathVcs = ui->lineEdit_PathVcs->text();
     sPathWorking = ui->lineEdit_PathWorking->text();
 
@@ -88,7 +91,7 @@ void MainWindow::on_pushButton_Start_clicked()
             vcs = vcs_svn;
     }
     if (vcs == vcs_NA) {
-        ui->plainTextEdit_MsgOutput->appendPlainText(tr("VCS directory not valid/supported"));
+        DispMsg(tr("VCS directory not valid/supported"));
         return;
     }
 
@@ -124,6 +127,7 @@ void MainWindow::on_pushButton_Stop_clicked()
     if (prcQueryVsc->state() != QProcess::NotRunning)
         prcQueryVsc->kill();
     ui->label_StateMsg->setText(tr("Stopped"));
+    ui->pushButton_Start->setEnabled(true);
 }
 
 void MainWindow::slTmrQueryVsc()
@@ -157,7 +161,7 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
 {
     QProcess *process = (QProcess *)sender();
     if (exitCode != 0 || exitStatus != QProcess::NormalExit) {
-        ui->plainTextEdit_MsgOutput->appendPlainText(WrapQPrcErrMsg(process));
+        DispMsg(WrapQPrcErrMsg(process));
         return;
     }
 
@@ -205,6 +209,7 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         if (i == size - 1 || i % nUpdateUiIntv == 0) {
             ui->label_FileCount->setText(QString("%0/%1").arg(i+1).arg(size));
             QCoreApplication::processEvents();
+            QThread::msleep(1);  // reduce cpu usage, takes <=100ms for whole 'for' loop
         }
     }
 
@@ -230,6 +235,15 @@ QStringList MainWindow::QStringSplitNewline(const QString &str)
 #endif
     QStringList ret = str.split(sepChar, QString::SkipEmptyParts);
     return ret;
+}
+
+void MainWindow::DispMsg(const QString &msg, bool err)
+{
+    ui->plainTextEdit_MsgOutput->appendPlainText(msg);
+    if (err) {
+        ui->label_StateMsg->setText(tr("Stopped"));
+        ui->pushButton_Start->setEnabled(true);
+    }
 }
 
 void MainWindow::RemoveExistingPath(const QFileInfo &fi)
@@ -258,13 +272,13 @@ void MainWindow::CopyFileIncludeMTime(const QFileInfo &srcFi, const QFileInfo &d
 
     bool ret = QFile::copy(srcPath, destPath);
     if (!ret) {
-        ui->plainTextEdit_MsgOutput->appendPlainText(tr("Copy %1 to %2 Failed").arg(srcPath, destPath));
+        DispMsg(tr("Copy %1 to %2 Failed").arg(srcPath, destPath));
         return;
     }
 
     ret = SetFileMTime(destPath, srcFi.lastModified());
     if (!ret) {
-        ui->plainTextEdit_MsgOutput->appendPlainText(tr("Set %1's MTime(%2) Failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
+        DispMsg(tr("Set %1's MTime(%2) Failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
     }
 }
 
