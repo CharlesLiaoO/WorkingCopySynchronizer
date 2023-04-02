@@ -176,9 +176,8 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
 
     for (int i=0; i < size; i++) {
         auto &sVcsFile = sVcsFileList[i];
-        if (bStop) {
+        if (bStop)
             return;
-        }
 
         QFileInfo fiVcs(sPathVcs + "/" + sVcsFile);
         QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
@@ -247,6 +246,7 @@ void MainWindow::DispMsg(const QString &msg, bool err)
 {
     ui->plainTextEdit_MsgOutput->appendPlainText(msg);
     if (err) {
+        bStop = true;
         ui->label_StateMsg->setText(tr("Stopped"));
         ui->pushButton_Start->setEnabled(true);
     }
