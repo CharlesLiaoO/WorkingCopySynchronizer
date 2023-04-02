@@ -71,6 +71,13 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
+         <widget class="QCheckBox" name="checkBox_RunOnce">
+          <property name="text">
+           <string>Once</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="pushButton_Start">
           <property name="text">
            <string>Start</string>

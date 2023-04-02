@@ -36,6 +36,8 @@ private slots:
     void on_toolButton_Setting_clicked();
     void on_toolButton_About_clicked();
 
+    void on_checkBox_RunOnce_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 
@@ -46,6 +48,8 @@ private:
     bool bStop;
     QTimer *tmrQueryVsc;
     QProcess *prcQueryVsc;
+
+    bool bRunOnce;
 
     enum VCS {
         vcs_NA,

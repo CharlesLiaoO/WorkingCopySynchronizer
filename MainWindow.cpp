@@ -40,6 +40,11 @@ MainWindow::MainWindow(QWidget *parent)
     sPathWorking = setting.value("PathWorking", "").toString();
     ui->lineEdit_PathVcs->setText(sPathVcs);
     ui->lineEdit_PathWorking->setText(sPathWorking);
+
+    bRunOnce = setting.value("RunOnce", false).toBool();
+    ui->checkBox_RunOnce->blockSignals(true);
+    ui->checkBox_RunOnce->setChecked(bRunOnce);
+    ui->checkBox_RunOnce->blockSignals(false);
 }
 
 MainWindow::~MainWindow()
@@ -72,6 +77,7 @@ void MainWindow::on_pushButton_PathWorkingBrowse_clicked()
 void MainWindow::on_pushButton_Start_clicked()
 {
     ui->pushButton_Start->setEnabled(false);
+    ui->checkBox_RunOnce->setEnabled(false);
 
     sPathVcs = ui->lineEdit_PathVcs->text();
     sPathWorking = ui->lineEdit_PathWorking->text();
@@ -129,6 +135,7 @@ void MainWindow::on_pushButton_Stop_clicked()
         prcQueryVsc->kill();
     ui->label_StateMsg->setText(tr("Stopped"));
     ui->pushButton_Start->setEnabled(true);
+    ui->checkBox_RunOnce->setEnabled(true);
 }
 
 void MainWindow::slTmrQueryVsc()
@@ -213,7 +220,10 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         }
     }
 
-    tmrQueryVsc->start();
+    if (bRunOnce) {
+        on_pushButton_Stop_clicked();  //set stopped state
+    } else
+        tmrQueryVsc->start();
 }
 
 QString MainWindow::WrapQPrcErrMsg(QProcess *process, const QString &argSep)
@@ -249,6 +259,7 @@ void MainWindow::DispMsg(const QString &msg, bool err)
         bStop = true;
         ui->label_StateMsg->setText(tr("Stopped"));
         ui->pushButton_Start->setEnabled(true);
+        ui->checkBox_RunOnce->setEnabled(true);
     }
 }
 
@@ -300,4 +311,11 @@ void MainWindow::on_toolButton_About_clicked()
 {
     AboutDlg aboutDlg(this);
     aboutDlg.exec();
+}
+
+void MainWindow::on_checkBox_RunOnce_toggled(bool checked)
+{
+    bRunOnce = checked;
+    IniSetting setting(sIniPath);
+    setting.setValue("RunOnce", bRunOnce);
 }
