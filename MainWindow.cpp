@@ -69,7 +69,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::on_pushButton_PathMasterBrowse_clicked()
 {
     QString sPathLast = ui->lineEdit_PathMaster->text();
-    QString sDir = QFileDialog::getExistingDirectory(this, tr("Choose a directory"), sPathLast);
+    QString sDir = QFileDialog::getExistingDirectory(this, tr("Choose the Master directory"), sPathLast);
     if (!sDir.isEmpty())
         ui->lineEdit_PathMaster->setText(sDir);
 }
@@ -77,7 +77,7 @@ void MainWindow::on_pushButton_PathMasterBrowse_clicked()
 void MainWindow::on_pushButton_PathBranchBrowse_clicked()
 {
     QString sPathLast = ui->lineEdit_PathBranch->text();
-    QString sDir = QFileDialog::getExistingDirectory(this, tr("Choose a directory"), sPathLast);
+    QString sDir = QFileDialog::getExistingDirectory(this, tr("Choose the Branch directory"), sPathLast);
     if (!sDir.isEmpty())
         ui->lineEdit_PathBranch->setText(sDir);
 }
@@ -362,8 +362,12 @@ void MainWindow::CopyFileAndMTime(const QFileInfo &srcFi, const QFileInfo &destF
 }
 
 #include <SettingDlg.h>
+#include <QMessageBox>
 void MainWindow::on_toolButton_Setting_clicked()
 {
+    QMessageBox::information(this, "", "Nothing Yet~");
+    return;
+
     SettingDlg settingDlg(this);
     settingDlg.exec();
 }
