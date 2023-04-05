@@ -11,18 +11,18 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>VcsSync</string>
+   <string>Working Copy Synchronizer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1">
     <item>
      <widget class="QGroupBox" name="groupBox_4">
       <property name="title">
-       <string>Directory</string>
+       <string>Working Copy Directory</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="2">
-        <widget class="QPushButton" name="pushButton_PathVcsBrowse">
+        <widget class="QPushButton" name="pushButton_PathMasterBrowse">
          <property name="text">
           <string>Browse</string>
          </property>
@@ -31,12 +31,12 @@
        <item row="0" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>VCS:</string>
+          <string>Master:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="lineEdit_PathVcs">
+        <widget class="QLineEdit" name="lineEdit_PathMaster">
          <property name="text">
           <string/>
          </property>
@@ -45,19 +45,19 @@
        <item row="1" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Working:</string>
+          <string>Branch:</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="lineEdit_PathWorking">
+        <widget class="QLineEdit" name="lineEdit_PathBranch">
          <property name="text">
           <string/>
          </property>
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QPushButton" name="pushButton_PathWorkingBrowse">
+        <widget class="QPushButton" name="pushButton_PathBranchBrowse">
          <property name="text">
           <string>Browse</string>
          </property>

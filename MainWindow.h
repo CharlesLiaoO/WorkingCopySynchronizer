@@ -19,8 +19,8 @@ public:
     void closeEvent(QCloseEvent *e);
 
 private slots:
-    void on_pushButton_PathVcsBrowse_clicked();
-    void on_pushButton_PathWorkingBrowse_clicked();
+    void on_pushButton_PathMasterBrowse_clicked();
+    void on_pushButton_PathBranchBrowse_clicked();
     void on_pushButton_Start_clicked();
     void on_pushButton_Stop_clicked();
     void on_checkBox_RunOnce_toggled(bool checked);
@@ -46,8 +46,8 @@ private:
         vcs_svn,
     } vcs;
 
-    QString sPathVcs;
-    QString sPathWorking;
+    QString sPathMaster;
+    QString sPathBranch;
     QString sIniPath;
 
     bool bStop;

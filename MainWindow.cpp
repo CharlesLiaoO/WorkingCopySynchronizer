@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowIcon(QIcon("://images/VcsSync.png"));
+    setWindowIcon(QIcon("://images/WorkingCopySynchronizer.png"));
     ui->toolButton_About->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
     ui->label_StateMsg->setText(tr("Stopped"));
 
@@ -44,10 +44,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     sIniPath = "setting.ini";
     IniSetting setting(sIniPath);
-    sPathVcs = setting.value("PathVcs", "").toString();
-    sPathWorking = setting.value("PathWorking", "").toString();
-    ui->lineEdit_PathVcs->setText(sPathVcs);
-    ui->lineEdit_PathWorking->setText(sPathWorking);
+    sPathMaster = setting.value("PathMaster", "").toString();
+    sPathBranch = setting.value("PathBranch", "").toString();
+    ui->lineEdit_PathMaster->setText(sPathMaster);
+    ui->lineEdit_PathBranch->setText(sPathBranch);
 
     bRunOnce = setting.value("RunOnce", false).toBool();
     ui->checkBox_RunOnce->blockSignals(true);
@@ -66,20 +66,20 @@ void MainWindow::closeEvent(QCloseEvent *e)
     Q_UNUSED(e)
 }
 
-void MainWindow::on_pushButton_PathVcsBrowse_clicked()
+void MainWindow::on_pushButton_PathMasterBrowse_clicked()
 {
-    QString sPathLast = ui->lineEdit_PathVcs->text();
+    QString sPathLast = ui->lineEdit_PathMaster->text();
     QString sDir = QFileDialog::getExistingDirectory(this, tr("Choose a directory"), sPathLast);
     if (!sDir.isEmpty())
-        ui->lineEdit_PathVcs->setText(sDir);
+        ui->lineEdit_PathMaster->setText(sDir);
 }
 
-void MainWindow::on_pushButton_PathWorkingBrowse_clicked()
+void MainWindow::on_pushButton_PathBranchBrowse_clicked()
 {
-    QString sPathLast = ui->lineEdit_PathWorking->text();
+    QString sPathLast = ui->lineEdit_PathBranch->text();
     QString sDir = QFileDialog::getExistingDirectory(this, tr("Choose a directory"), sPathLast);
     if (!sDir.isEmpty())
-        ui->lineEdit_PathWorking->setText(sDir);
+        ui->lineEdit_PathBranch->setText(sDir);
 }
 
 void MainWindow::on_pushButton_Start_clicked()
@@ -87,11 +87,11 @@ void MainWindow::on_pushButton_Start_clicked()
     ui->pushButton_Start->setEnabled(false);
     ui->checkBox_RunOnce->setEnabled(false);
 
-    sPathVcs = ui->lineEdit_PathVcs->text();
-    sPathWorking = ui->lineEdit_PathWorking->text();
+    sPathMaster = ui->lineEdit_PathMaster->text();
+    sPathBranch = ui->lineEdit_PathBranch->text();
 
     QProcess prcIdnetifyVsc;
-    prcIdnetifyVsc.setWorkingDirectory(sPathVcs);
+    prcIdnetifyVsc.setWorkingDirectory(sPathMaster);
     vcs = vcs_NA;
     if (vcs == vcs_NA) {
         prcIdnetifyVsc.setProgram("git");
@@ -111,10 +111,10 @@ void MainWindow::on_pushButton_Start_clicked()
     }
 
     IniSetting setting(sIniPath);
-    setting.setValue("PathVcs", sPathVcs);
-    setting.setValue("PathWorking", sPathWorking);
+    setting.setValue("PathMaster", sPathMaster);
+    setting.setValue("PathBranch", sPathBranch);
 
-    prcQueryVsc->setWorkingDirectory(sPathVcs);
+    prcQueryVsc->setWorkingDirectory(sPathMaster);
 
     switch (vcs) {
     case vcs_git:
@@ -219,34 +219,34 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
         if (bStop)
             return;
 
-        QFileInfo fiVcs(sPathVcs + "/" + sVcsFile);
-        QFileInfo fiWorking(sPathWorking + "/" + sVcsFile);
+        QFileInfo fiMaster(sPathMaster + "/" + sVcsFile);
+        QFileInfo fiBranch(sPathBranch + "/" + sVcsFile);
 
         UpdateUiInLoop(i, copyedLastTime);
 
         // not exists: not checkout or deleted
-        if (!fiVcs.exists()) {
-            RemoveExistingPath(fiWorking);
+        if (!fiMaster.exists()) {
+            RemoveExistingPath(fiBranch);
             continue;
         }
 
         // git has no dir; dir: overwrite working file or dir
-        if (vcs != vcs_git && fiVcs.isDir()) {
-            if (fiWorking.isFile())
-                QFile::remove(fiWorking.filePath());
-            if (!fiWorking.exists()) {
+        if (vcs != vcs_git && fiMaster.isDir()) {
+            if (fiBranch.isFile())
+                QFile::remove(fiBranch.filePath());
+            if (!fiBranch.exists()) {
                 QDir dir;
-                dir.mkpath(fiWorking.absolutePath());
+                dir.mkpath(fiBranch.absolutePath());
             }
             continue;
         }
 
-        int msWorkingMt2VcsMt = fiWorking.lastModified().msecsTo(fiVcs.lastModified());
-        if (msWorkingMt2VcsMt > nMaxErrorOfSystime || !fiWorking.exists()) {
-            CopyFileAndMTime(fiVcs, fiWorking);
+        int msBranchMt2MasterMt = fiBranch.lastModified().msecsTo(fiMaster.lastModified());
+        if (msBranchMt2MasterMt > nMaxErrorOfSystime || !fiBranch.exists()) {
+            CopyFileAndMTime(fiMaster, fiBranch);
             copyedLastTime = true;
-        } else if (msWorkingMt2VcsMt < - nMaxErrorOfSystime) {
-            CopyFileAndMTime(fiWorking, fiVcs);
+        } else if (msBranchMt2MasterMt < - nMaxErrorOfSystime) {
+            CopyFileAndMTime(fiBranch, fiMaster);
             copyedLastTime = true;
         } else
             copyedLastTime = false;
