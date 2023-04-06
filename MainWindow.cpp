@@ -351,13 +351,13 @@ void MainWindow::CopyFileAndMTime(const QFileInfo &srcFi, const QFileInfo &destF
 
     bool ret = QFile::copy(srcPath, destPath);
     if (!ret) {
-        DispMsg(tr("Copy %1 to %2 Failed").arg(srcPath, destPath));
+        DispMsg(tr("Copy %1 to %2 failed").arg(srcPath, destPath));
         return;
     }
 
     ret = SetFileMTime(destPath, srcFi.lastModified());
     if (!ret) {
-        DispMsg(tr("Set %1's MTime(%2) Failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
+        DispMsg(tr("Set %1's modified time(%2) failed").arg(destPath, destFi.lastModified().toString("yyyy-MM-dd hh:mm:ss.zzz")));
     }
 }
 
@@ -365,7 +365,7 @@ void MainWindow::CopyFileAndMTime(const QFileInfo &srcFi, const QFileInfo &destF
 #include <QMessageBox>
 void MainWindow::on_toolButton_Setting_clicked()
 {
-    QMessageBox::information(this, "", "Nothing Yet~");
+    QMessageBox::information(this, "", "Nothing yet~");
     return;
 
     SettingDlg settingDlg(this);
