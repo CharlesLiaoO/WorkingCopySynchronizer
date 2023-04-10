@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowIcon(QIcon("://images/WorkingCopySynchronizer.png"));
+    setWindowIcon(QIcon("://images/WCS.png"));
     ui->toolButton_About->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
     ui->label_StateMsg->setText(tr("Stopped"));
 
@@ -120,7 +120,7 @@ void MainWindow::on_pushButton_Start_clicked()
     case vcs_git:
         prcQueryVsc->setProgram("git");
         sQueryArgList = QStringList{"ls-files"};
-        sQueryArgList = QStringList{"ls-tree", "-r", "--name-only", "HEAD"};  // without cached changes
+//        sQueryArgList = QStringList{"ls-tree", "-r", "--name-only", "HEAD"};  // without cached changes
         break;
     case vcs_svn:
         prcQueryVsc->setProgram("svn");
