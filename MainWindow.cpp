@@ -84,6 +84,8 @@ void MainWindow::on_pushButton_PathBranchBrowse_clicked()
 
 void MainWindow::on_pushButton_Start_clicked()
 {
+    DispMsg(tr("\n---- Start at %1 ----").arg(QTime::currentTime().toString("hh:mm:ss")), false);
+
     ui->pushButton_Start->setEnabled(false);
     ui->checkBox_RunOnce->setEnabled(false);
 
