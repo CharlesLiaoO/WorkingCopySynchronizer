@@ -241,7 +241,9 @@ void MainWindow::slPrcQueryVscFinished(int exitCode, int exitStatus)
             continue;
         }
 
-        int msBranchMt2MasterMt = fiBranch.lastModified().msecsTo(fiMaster.lastModified());
+        QDateTime dtBranch = fiBranch.lastModified();
+        QDateTime dtMaster = fiMaster.lastModified();
+        qint64 msBranchMt2MasterMt = dtBranch.msecsTo(dtMaster);
         if (msBranchMt2MasterMt > nMaxErrorOfSystime || !fiBranch.exists()) {
             CopyFileAndMTime(fiMaster, fiBranch);
             copyedLastTime = true;
