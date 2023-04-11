@@ -108,7 +108,7 @@ void MainWindow::on_pushButton_Start_clicked()
             vcs = vcs_svn;
     }
     if (vcs == vcs_NA) {
-        DispMsg(tr("VCS directory not valid/supported"));
+        DispMsg(tr("Recognize VCS directory timeout or failed"));
         return;
     }
 

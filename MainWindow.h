@@ -25,7 +25,7 @@ private slots:
     void on_pushButton_Stop_clicked();
     void on_checkBox_RunOnce_toggled(bool checked);
 
-    bool QPrcExeSync(QProcess *process, QString *mergedOutput=nullptr, int timeout=1000);
+    bool QPrcExeSync(QProcess *process, QString *mergedOutput=nullptr, int timeout=3000);
     QString WrapQPrcErrMsg(QProcess *process, const QString &argSep="§");
     void slTmrQueryVsc();
     void slPrcQueryVscFinished(int exitCode, int exitStatus);
