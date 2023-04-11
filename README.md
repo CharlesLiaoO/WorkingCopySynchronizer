@@ -1,7 +1,8 @@
 # Working Copy Synchronizer (WCS)
 Synchronizer of version control system's working copy
 
-When you write the cross platform codes with vcs (version control system), in order to synchronize code between platforms efficiently, you may do these:
+When you write the cross platform (or cross device) codes with vcs (version control system), 
+in order to synchronize code between platforms efficiently, you may do these:
 * First: Use vcs client in every platform, synchronize codes through server of vcs.
 * Second: Use only one working copy and one vcs client in a platform, then use Network Shared Folder to synchronize codes to other platforms.
 
