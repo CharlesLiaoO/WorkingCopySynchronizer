@@ -4,12 +4,17 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QTextCodec>
+#include <QDir>
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);  // linux need but window not
 
     QApplication a(argc, argv);
+    qDebug()<< QDir::currentPath();
+    QDir::setCurrent(MyDestDir);
+    qDebug()<< QDir::currentPath();
 
 #ifdef Q_OS_UNIX
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
